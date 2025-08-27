@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Upload, X, Eye, Save } from 'lucide-react';
+// src/components/creator/SeriesForm.jsx
 
-const SeriesForm = ({ initialData, onSave, onPublish }) => {
+import React, { useState, useEffect } from 'react';
+import ImageUploader from './ImageUploader';
+import { validateSeriesForm } from '../../utils/validators';
+
+const SeriesForm = ({ initialData, onSave }) => {
   const [formData, setFormData] = useState({
     title: '',
-    tags: [],
     description: '',
-    cover: null,
-    coverPreview: null,
+    tags: [],
+    status: 'ongoing',
+    coverImage: null,
   });
 
   useEffect(() => {
@@ -21,130 +24,79 @@ const SeriesForm = ({ initialData, onSave, onPublish }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCoverUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData(prev => ({
-        ...prev,
-        cover: file,
-        coverPreview: URL.createObjectURL(file)
-      }));
-    }
+  const handleTagChange = (e) => {
+    const tags = e.target.value.split(',').map(tag => tag.trim());
+    setFormData(prev => ({ ...prev, tags }));
   };
 
-  const handleTagAdd = (tag) => {
-    if (tag && !formData.tags.includes(tag)) {
-      setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
-    }
+  const handleImageUpload = (image) => {
+    setFormData(prev => ({ ...prev, coverImage: image }));
   };
 
-  const handleTagRemove = (tagToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-  const handleSubmit = (e, isPublishing = false) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (isPublishing) {
-      onPublish(formData);
-    } else {
-      onSave(formData);
-    }
+    onSave(formData);
   };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, false)} className="series-form">
-      <div className="form-grid">
-        <div className="cover-section">
-          <div className="cover-upload">
-            {formData.coverPreview ? (
-              <div className="cover-preview">
-                <img src={formData.coverPreview} alt="Cover preview" />
-                <button type="button" onClick={() => setFormData(prev => ({ ...prev, cover: null, coverPreview: null }))}>
-                  <X size={24} />
-                </button>
-              </div>
-            ) : (
-              <label htmlFor="cover" className="cover-upload-label">
-                <Upload size={24} />
-                <span>Upload Cover</span>
-                <input
-                  type="file"
-                  id="cover"
-                  accept="image/*"
-                  onChange={handleCoverUpload}
-                  style={{ display: 'none' }}
-                />
-              </label>
-            )}
-          </div>
-        </div>
-
-        <div className="form-fields">
-          <div className="form-group">
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Title"
-              required
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <input
-              type="text"
-              id="tags"
-              placeholder="Add tags (press Enter to add)"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleTagAdd(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-              className="form-input"
-            />
-            <div className="tags-container">
-              {formData.tags.map(tag => (
-                <span key={tag} className="tag">
-                  {tag}
-                  <button type="button" onClick={() => handleTagRemove(tag)}>
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Description"
-              required
-              className="form-textarea"
-              rows={6}
-            />
-          </div>
-        </div>
+    <form onSubmit={handleSubmit} className="series-form">
+      <div className="form-group">
+        <label htmlFor="title">Title</label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          value={formData.title}
+          onChange={handleInputChange}
+          required
+        />
       </div>
 
-      <div className="form-actions">
-        <button type="button" className="btn btn-secondary">
-          <Eye size={16} /> Preview
-        </button>
-        <button type="submit" className="btn btn-primary">
-          <Save size={16} /> Save
-        </button>
+      <div className="form-group">
+        <label htmlFor="description">Description</label>
+        <textarea
+          id="description"
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          required
+        />
       </div>
+
+      <div className="form-group">
+        <label htmlFor="tags">Tags (comma-separated)</label>
+        <input
+          type="text"
+          id="tags"
+          name="tags"
+          value={formData.tags.join(', ')}
+          onChange={handleTagChange}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="status">Status</label>
+        <select
+          id="status"
+          name="status"
+          value={formData.status}
+          onChange={handleInputChange}
+        >
+          <option value="ongoing">Ongoing</option>
+          <option value="completed">Completed</option>
+          <option value="hiatus">On Hiatus</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Cover Image</label>
+        <ImageUploader
+          onImageUpload={handleImageUpload}
+          currentImage={formData.coverImage}
+        />
+      </div>
+
+      <button type="submit" className="btn btn-primary">Save Series</button>
     </form>
   );
 };

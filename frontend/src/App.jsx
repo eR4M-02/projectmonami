@@ -7,6 +7,7 @@ import SeriesCreateEdit from './pages/creator/SeriesCreateEdit.jsx';
 import ChapterEditor from './pages/creator/ChapterEditor.jsx';
 import './styles/globals.css';
 
+
 /**
  * Home page component - shows different content based on auth state
  * Provides navigation to creator dashboard for logged-in users

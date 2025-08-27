@@ -695,8 +695,9 @@ p {
 
 .editor-grid {
   display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: var(--spacing-2xl);
+  grid-template-columns: 1fr 2fr;
+  gap: 40px;
+  margin-bottom: 30px;
 }
 
 @media (max-width: 1024px) {
@@ -1065,8 +1066,8 @@ p {
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 15px;
+  margin-top: 40px;
 }
 
 .btn {
@@ -1087,4 +1088,51 @@ p {
 .btn-secondary {
   background-color: #6c757d;
   color: white;
+}
+
+.series-create-edit {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+
+.cover-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.series-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.chapters-section {
+  border-top: 1px solid var(--gray-700);
+  padding-top: 30px;
+}
+
+.chapter-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--gray-700);
+}
+
+.chapter-actions {
+  display: flex;
+  gap: 10px;
 }

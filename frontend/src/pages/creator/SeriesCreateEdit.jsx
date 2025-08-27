@@ -1,88 +1,154 @@
+// src/pages/creator/SeriesCreateEdit.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Edit, Trash2, Plus, Eye, Save, ArrowLeft } from 'lucide-react';
 import SeriesForm from '../../components/creator/SeriesForm';
-import ChapterList from '../../components/series/ChapterList';
+import ImageUploader from '../../components/creator/ImageUploader';
+import { validateSeriesForm } from '../../utils/validators';
 
 const SeriesCreateEdit = () => {
+  // Extract seriesId from URL parameters
   const { seriesId } = useParams();
   const navigate = useNavigate();
-  const [seriesData, setSeriesData] = useState(null);
+  
+  // State for series data, chapters, and UI control
+  const [seriesData, setSeriesData] = useState({
+    title: '',
+    tags: [],
+    description: '',
+    coverImage: null,
+  });
   const [chapters, setChapters] = useState([]);
+  
+  // Determine if we're editing an existing series or creating a new one
+  const isEditing = Boolean(seriesId);
 
-  const isEditing = Boolean(seriesId && seriesId !== 'new');
-
+  // Fetch series data if we're editing an existing series
   useEffect(() => {
     if (isEditing) {
-      // Fetch series data and chapters
-      // This is a placeholder. Replace with actual API call.
-      setSeriesData({
-        title: 'Example Series',
-        description: 'This is an example series.',
-        tags: ['Action', 'Adventure'],
-        status: 'ongoing',
-        coverPreview: 'https://example.com/cover.jpg'
-      });
-      setChapters([
-        { id: 1, title: 'Chapter 1', rating: 4.5, comments: 10 },
-        { id: 2, title: 'Chapter 2', rating: 4.7, comments: 15 },
-      ]);
+      fetchSeriesData(seriesId);
     }
   }, [isEditing, seriesId]);
 
-  const handleSave = (formData) => {
-    console.log('Saving:', formData);
-    // Implement save logic
+  // Simulated API call to fetch series data
+  const fetchSeriesData = async (id) => {
+    // Replace this with actual API call in production
+    const mockData = {
+      title: 'Sample Series',
+      tags: ['Action', 'Adventure'],
+      description: 'This is a sample series description.',
+      coverImage: 'https://example.com/cover.jpg',
+      chapters: [
+        { id: 1, title: 'Chapter 1', rating: 4.5, comments: 10 },
+        { id: 2, title: 'Chapter 2', rating: 4.7, comments: 15 },
+      ],
+    };
+    setSeriesData(mockData);
+    setChapters(mockData.chapters);
   };
 
-  const handlePublish = (formData) => {
-    console.log('Publishing:', formData);
-    // Implement publish logic
+  // Handle changes in the series form
+  const handleSeriesDataChange = (field, value) => {
+    setSeriesData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleChapterEdit = (chapterId) => {
+  // Handle saving the series
+  const handleSave = () => {
+    const errors = validateSeriesForm(seriesData);
+    if (Object.keys(errors).length === 0) {
+      // Replace with actual API call in production
+      console.log('Saving series:', seriesData);
+      console.log('With chapters:', chapters);
+      navigate('/creator'); // Redirect to creator dashboard after saving
+    } else {
+      console.log('Validation errors:', errors);
+      // Handle displaying errors to the user
+    }
+  };
+
+  // Handle adding a new chapter
+  const handleAddChapter = () => {
+    const newChapter = {
+      id: Date.now(), // Temporary ID
+      title: `Chapter ${chapters.length + 1}`,
+      rating: 0,
+      comments: 0,
+    };
+    setChapters([...chapters, newChapter]);
+  };
+
+  // Handle editing a chapter
+  const handleEditChapter = (chapterId) => {
     navigate(`/creator/series/${seriesId}/chapter/${chapterId}/edit`);
   };
 
-  const handleChapterDelete = (chapterId) => {
-    // Implement delete logic
+  // Handle deleting a chapter
+  const handleDeleteChapter = (chapterId) => {
     setChapters(chapters.filter(chapter => chapter.id !== chapterId));
   };
 
-  const handleAddNewChapter = () => {
-    navigate(`/creator/series/${seriesId}/chapter/new`);
-  };
-
   return (
-    <div className="series-create-edit">
-      <header>
-        <Link to="/creator" className="back-link">
-          <ArrowLeft size={16} /> Back to Dashboard
-        </Link>
-        <h1>{isEditing ? 'Edit Series' : 'Create New Series'}</h1>
+    <div className="series-create-edit container">
+      <header className="editor-header">
+        <div className="header-content">
+          <Link to="/creator" className="back-link">
+            <ArrowLeft size={16} /> Back to Dashboard
+          </Link>
+          <h1 className="editor-title">{isEditing ? 'Edit Series' : 'Create New Series'}</h1>
+        </div>
       </header>
 
-      <main>
-        <SeriesForm
-          initialData={seriesData}
-          onSave={handleSave}
-          onPublish={handlePublish}
-        />
-
-        {isEditing && (
-          <div className="chapter-section">
-            <h2>Chapters</h2>
-            <ChapterList
-              chapters={chapters}
-              isCreator={true}
-              onEdit={handleChapterEdit}
-              onDelete={handleChapterDelete}
+      <main className="editor-content">
+        <div className="editor-grid">
+          {/* Left column: Cover image upload */}
+          <div className="cover-section">
+            <ImageUploader
+              currentImage={seriesData.coverImage}
+              onImageUpload={(image) => handleSeriesDataChange('coverImage', image)}
             />
-            <button onClick={handleAddNewChapter} className="btn btn-primary">
-              Add New Chapter
-            </button>
           </div>
-        )}
+
+          {/* Right column: Series details form */}
+          <div className="series-details">
+            <SeriesForm
+              seriesData={seriesData}
+              onDataChange={handleSeriesDataChange}
+            />
+          </div>
+        </div>
+
+        {/* Preview and Save buttons */}
+        <div className="form-actions">
+          <button className="btn btn-secondary">
+            <Eye size={16} /> Preview
+          </button>
+          <button onClick={handleSave} className="btn btn-primary">
+            <Save size={16} /> Save
+          </button>
+        </div>
+
+        {/* Chapters section */}
+        <div className="chapters-section">
+          <h2>Chapters</h2>
+          {chapters.map((chapter) => (
+            <div key={chapter.id} className="chapter-item">
+              <span>{chapter.title}</span>
+              <span>Rating: {chapter.rating} | Comments: {chapter.comments}</span>
+              <div className="chapter-actions">
+                <button onClick={() => handleEditChapter(chapter.id)} className="btn btn-sm">
+                  <Edit size={14} />
+                </button>
+                <button onClick={() => handleDeleteChapter(chapter.id)} className="btn btn-sm btn-danger">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button onClick={handleAddChapter} className="btn btn-primary">
+            <Plus size={16} /> Add New Chapter
+          </button>
+        </div>
       </main>
     </div>
   );
