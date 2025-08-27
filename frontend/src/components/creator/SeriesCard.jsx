@@ -1,157 +1,214 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Star, Edit, Trash2, Plus, MoreVertical } from 'lucide-react';
+import { 
+  Eye, 
+  Star, 
+  Edit, 
+  Trash2, 
+  Plus, 
+  MoreVertical, 
+  Calendar,
+  BookOpen
+} from 'lucide-react';
 
-const SeriesCard = ({ series }) => {
+/**
+ * SeriesCard - Compact horizontal layout for creator dashboard
+ * Shows series cover on left with details on right in a quick overview format
+ * Optimized for scanning multiple series at once
+ */
+const SeriesCard = ({ series, onDelete }) => {
+  // State for dropdown menu visibility
   const [showMenu, setShowMenu] = useState(false);
+  // State for deletion loading animation
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete "${series.title}"? This action cannot be undone.`)) {
-      console.log('Delete series:', series.id);
-      // TODO: Implement delete functionality
+  /**
+   * Handle series deletion with confirmation dialog
+   * Shows loading state and calls parent's onDelete function
+   */
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${series.title}"?\n\nThis action cannot be undone and will remove all chapters and data associated with this series.`
+    );
+    
+    if (confirmed && onDelete) {
+      setIsDeleting(true);
+      try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        onDelete(series.id);
+      } catch (error) {
+        console.error('Failed to delete series:', error);
+        setIsDeleting(false);
+      }
+    }
+    setShowMenu(false);
+  };
+
+  /**
+   * Get appropriate CSS class for status badge based on series status
+   */
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'completed': return 'status-live';
+      case 'ongoing': return 'status-draft';
+      case 'hiatus': return 'status-incomplete';
+      default: return 'status-incomplete';
     }
   };
 
+  /**
+   * Format date string for display (e.g., "Jan 15")
+   */
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Show deletion loading state
+  if (isDeleting) {
+    return (
+      <div className="series-card-compact deleting">
+        <div className="deleting-overlay">
+          <div className="spinner" />
+          <p>Deleting...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-      {/* Cover Image */}
-      <div style={{ position: 'relative' }}>
+    <div className="series-card-compact">
+      {/* Left Side - Cover Image */}
+      <div className="series-cover-compact">
         <img
           src={series.cover}
-          alt={series.title}
-          style={{
-            width: '100%',
-            height: '240px',
-            objectFit: 'cover'
-          }}
+          alt={`${series.title} cover`}
+          className="cover-image-compact"
+          loading="lazy"
         />
         
-        {/* Action Menu */}
-        <div style={{
-          position: 'absolute',
-          top: 'var(--spacing-sm)',
-          right: 'var(--spacing-sm)'
-        }}>
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="btn btn-ghost btn-sm"
-            style={{ 
-              background: 'var(--overlay)',
-              backdropFilter: 'blur(4px)'
-            }}
-          >
-            <MoreVertical size={14} />
-          </button>
-          
-          {showMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              right: 0,
-              background: 'var(--primary)',
-              borderRadius: 'var(--radius-md)',
-              boxShadow: 'var(--shadow-lg)',
-              padding: 'var(--spacing-xs)',
-              minWidth: '120px',
-              zIndex: 10
-            }}>
-              <Link
-                to={`/creator/series/${series.id}/edit`}
-                className="btn btn-ghost btn-sm w-full"
-                style={{ justifyContent: 'flex-start' }}
-              >
-                <Edit size={14} />
-                Edit
-              </Link>
-              <button
-                onClick={handleDelete}
-                className="btn btn-ghost btn-sm w-full"
-                style={{ 
-                  justifyContent: 'flex-start',
-                  color: 'var(--error)'
-                }}
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Status Badge */}
-        <div style={{
-          position: 'absolute',
-          bottom: 'var(--spacing-sm)',
-          left: 'var(--spacing-sm)'
-        }}>
-          <span className={`status-badge ${
-            series.status === 'completed' ? 'status-live' : 
-            series.status === 'ongoing' ? 'status-draft' : 'status-incomplete'
-          }`}>
+        {/* Status Badge overlaid on cover */}
+        <div className="status-badge-overlay">
+          <span className={`status-badge ${getStatusClass(series.status)}`}>
             {series.status}
           </span>
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{ padding: 'var(--spacing-lg)' }}>
-        <h3 style={{ 
-          fontSize: 'var(--text-lg)', 
-          fontWeight: '600', 
-          marginBottom: 'var(--spacing-sm)',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }}>
-          {series.title}
-        </h3>
-
-        <p style={{
-          fontSize: 'var(--text-sm)',
-          color: 'var(--gray-400)',
-          marginBottom: 'var(--spacing-md)',
-          overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical'
-        }}>
-          {series.description}
-        </p>
-
-        {/* Stats */}
-        <div className="flex justify-between items-center" style={{ 
-          marginBottom: 'var(--spacing-md)',
-          fontSize: 'var(--text-sm)',
-          color: 'var(--gray-400)'
-        }}>
-          <div className="flex items-center gap-xs">
-            <Eye size={14} />
-            <span>{series.readers.toLocaleString()}</span>
+      {/* Right Side - Series Details */}
+      <div className="series-details-compact">
+        
+        {/* Header Row - Title and Actions */}
+        <div className="series-header-row">
+          <div className="series-title-section">
+            <h3 className="series-title-compact" title={series.title}>
+              {series.title}
+            </h3>
+            
+            {/* Tags - show first 2 tags */}
+            {series.tags && series.tags.length > 0 && (
+              <div className="series-tags-compact">
+                {series.tags.slice(0, 2).map((tag, index) => (
+                  <span key={index} className="tag-compact">
+                    {tag}
+                  </span>
+                ))}
+                {series.tags.length > 2 && (
+                  <span className="tag-more-compact">+{series.tags.length - 2}</span>
+                )}
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-xs">
-            <Star size={14} fill="currentColor" />
-            <span>{series.rating}</span>
-          </div>
-          <div>
-            {series.chapters} chapters
+
+          {/* Actions Menu */}
+          <div className="series-actions-compact">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="menu-trigger-compact"
+              aria-label="More actions"
+            >
+              <MoreVertical size={16} />
+            </button>
+            
+            {showMenu && (
+              <>
+                {/* Backdrop to close menu */}
+                <div 
+                  className="menu-backdrop" 
+                  onClick={() => setShowMenu(false)}
+                />
+                <div className="dropdown-menu-compact">
+                  <button
+                    className="menu-item"
+                    onClick={() => setShowMenu(false)}
+                    disabled
+                  >
+                    <Edit size={14} />
+                    Edit Series
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="menu-item danger"
+                  >
+                    <Trash2 size={14} />
+                    Delete Series
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-sm">
-          <Link
-            to={`/creator/series/${series.id}/chapter/new`}
-            className="btn btn-primary btn-sm flex-1"
+        {/* Description */}
+        <p className="series-description-compact">
+          {series.description}
+        </p>
+
+        {/* Stats Row */}
+        <div className="series-stats-compact">
+          <div className="stat-group">
+            <div className="stat-item-compact">
+              <Eye size={14} />
+              <span>{series.readers.toLocaleString()} readers</span>
+            </div>
+            <div className="stat-item-compact">
+              <Star size={14} />
+              <span>{series.rating} rating</span>
+            </div>
+            <div className="stat-item-compact">
+              <BookOpen size={14} />
+              <span>{series.chapters} chapters</span>
+            </div>
+          </div>
+
+          {/* Last Updated */}
+          {series.lastUpdated && (
+            <div className="last-updated-compact">
+              <Calendar size={12} />
+              <span>Updated {formatDate(series.lastUpdated)}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons Row */}
+        <div className="series-actions-row">
+          <button
+            className="btn btn-primary btn-sm"
+            disabled
           >
             <Plus size={14} />
             Add Chapter
-          </Link>
-          <Link
-            to={`/series/${series.id}`}
+          </button>
+          <button
             className="btn btn-secondary btn-sm"
+            disabled
           >
+            <Eye size={14} />
             View
-          </Link>
+          </button>
         </div>
       </div>
     </div>
